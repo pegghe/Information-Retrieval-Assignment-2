@@ -1,0 +1,4 @@
+method,query_index,top_k,n_docs,dim,m,b,r,n_candidates,candidate_ratio,recall_at_k,n_overlap,timestamp
+LSH,42,10,17830,200,80,20,4,17830,1.0,1.0,10,2025-11-28T22:49:27
+LSH,42,10,17830,200,128,8,16,8527,0.4782389231632081,1.0,10,2025-11-28T22:51:58
+LSH,80,20,4,10,1.0,1.0

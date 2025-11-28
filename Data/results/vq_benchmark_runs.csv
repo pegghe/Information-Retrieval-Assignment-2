@@ -1,0 +1,4 @@
+method,query_index,top_k,n_docs,dim,c,n_candidates,candidate_ratio,recall_at_k,n_overlap,timestamp
+VQ,42,10,17830,200,200,165,0.009254066180594503,0.5,5,2025-11-28T22:58:19
+VQ,200,10,0.5,0.009254066180594503
+VQ,200,10,0.5,0.009254066180594503
