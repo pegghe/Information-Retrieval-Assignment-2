@@ -1,0 +1,82 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
+\@writefile{toc}{\contentsline {section}{Executive Summary}{4}{section*.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {1}Dataset and Document Representation}{4}{section.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.1}Dataset Selection}{4}{subsection.1.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.2}Vector Embedding Strategy}{5}{subsection.1.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {1.2.1}Choice of Embedding Model}{5}{subsubsection.1.2.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {1.2.2}Training Configuration}{5}{subsubsection.1.2.2}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {1}{\ignorespaces Word2Vec configuration}}{5}{lstlisting.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {1.2.3}Document-Level Representation}{5}{subsubsection.1.2.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {1.2.4}Optimisation for Similarity Search}{6}{subsubsection.1.2.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {2}Vector Quantization Implementation}{6}{section.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Algorithmic Approach}{6}{subsection.2.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Implementation Details}{6}{subsection.2.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.2.1}Clustering Library}{6}{subsubsection.2.2.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.2.2}Parameter Selection}{6}{subsubsection.2.2.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.2.3}Distance Metric}{7}{subsubsection.2.2.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}Query Algorithm}{7}{subsection.2.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.4}Experimental Results}{7}{subsection.2.4}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Vector Quantization results ($c = 200$ clusters).}}{7}{table.caption.3}\protected@file@percent }
+\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
+\newlabel{tab:vq-results}{{1}{7}{Vector Quantization results ($c = 200$ clusters)}{table.caption.3}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3}Locality Sensitive Hashing Implementation}{8}{section.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Theoretical Foundation}{8}{subsection.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Band--Row Structure}{8}{subsection.3.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Parameter Selection Methodology}{8}{subsection.3.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4}Experimental Results}{9}{subsection.3.4}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces LSH results ($m = 128$ total hash bits).}}{9}{table.caption.4}\protected@file@percent }
+\newlabel{tab:lsh-results}{{2}{9}{LSH results ($m = 128$ total hash bits)}{table.caption.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5}Limitations}{9}{subsection.3.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4}Product Quantization Implementation}{9}{section.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Algorithmic Approach}{9}{subsection.4.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Distance Computation}{10}{subsection.4.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Experimental Results}{10}{subsection.4.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Product Quantization results ($k = 256$ centroids per subspace).}}{10}{table.caption.5}\protected@file@percent }
+\newlabel{tab:pq-results}{{3}{10}{Product Quantization results ($k = 256$ centroids per subspace)}{table.caption.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.4}Limitations}{10}{subsection.4.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {5}FAISS: Production-Grade Indexing}{11}{section.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}Overview}{11}{subsection.5.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}Index Types Used}{11}{subsection.5.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.2.1}IndexIVFFlat (Inverted File with Flat Quantizer)}{11}{subsubsection.5.2.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.2.2}IndexIVFPQ (IVF + Product Quantization)}{11}{subsubsection.5.2.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.2.3}IndexLSH}{11}{subsubsection.5.2.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.3}FAISS Experimental Results}{12}{subsection.5.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces FAISS-IVF (IndexIVFFlat) results.}}{12}{table.caption.6}\protected@file@percent }
+\newlabel{tab:faiss-ivf}{{4}{12}{FAISS-IVF (IndexIVFFlat) results}{table.caption.6}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces FAISS-IVFPQ and FAISS-LSH results.}}{12}{table.caption.7}\protected@file@percent }
+\newlabel{tab:faiss-other}{{5}{12}{FAISS-IVFPQ and FAISS-LSH results}{table.caption.7}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.4}Performance Characteristics}{12}{subsection.5.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {6}Benchmarking and Comparison}{12}{section.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.1}Experimental Setup}{12}{subsection.6.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {6.1.1}Environment}{12}{subsubsection.6.1.1}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {2}{\ignorespaces Software environment}}{13}{lstlisting.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {6.1.2}Evaluation Protocol}{13}{subsubsection.6.1.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.2}Experiment 1: Accuracy vs.\ Efficiency Trade-off}{13}{subsection.6.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Accuracy vs.\ efficiency trade-off for VQ, PQ, and LSH. Left: Recall vs.\ candidate ratio. Middle: nDCG vs.\ candidate ratio. Right: Recall vs.\ query time.}}{13}{figure.caption.8}\protected@file@percent }
+\newlabel{fig:accuracy-efficiency}{{1}{13}{Accuracy vs.\ efficiency trade-off for VQ, PQ, and LSH. Left: Recall vs.\ candidate ratio. Middle: nDCG vs.\ candidate ratio. Right: Recall vs.\ query time}{figure.caption.8}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.3}Experiment 2: Scaling with Dataset Size}{14}{subsection.6.3}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Scaling behaviour with dataset size. Left: Index construction time. Right: Query time.}}{14}{figure.caption.9}\protected@file@percent }
+\newlabel{fig:scaling-n}{{2}{14}{Scaling behaviour with dataset size. Left: Index construction time. Right: Query time}{figure.caption.9}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces Build and query times across dataset sizes (best configurations).}}{14}{table.caption.10}\protected@file@percent }
+\newlabel{tab:scaling-n}{{6}{14}{Build and query times across dataset sizes (best configurations)}{table.caption.10}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.4}Experiment 3: Scaling with Dimensionality}{15}{subsection.6.4}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Scaling behaviour with embedding dimensionality.}}{15}{figure.caption.11}\protected@file@percent }
+\newlabel{fig:scaling-dim}{{3}{15}{Scaling behaviour with embedding dimensionality}{figure.caption.11}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {7}{\ignorespaces Scaling with dimensionality ($N = 10{,}000$).}}{15}{table.caption.12}\protected@file@percent }
+\newlabel{tab:scaling-dim}{{7}{15}{Scaling with dimensionality ($N = 10{,}000$)}{table.caption.12}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.5}Summary Comparison}{15}{subsection.6.5}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Summary comparison: Best recall, nDCG, build time, and query time per method.}}{16}{figure.caption.13}\protected@file@percent }
+\newlabel{fig:summary}{{4}{16}{Summary comparison: Best recall, nDCG, build time, and query time per method}{figure.caption.13}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {8}{\ignorespaces Summary of best configurations across all methods.}}{16}{table.caption.14}\protected@file@percent }
+\newlabel{tab:summary-all}{{8}{16}{Summary of best configurations across all methods}{table.caption.14}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {7}Discussion and Conclusions}{17}{section.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.1}Key Findings}{17}{subsection.7.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.2}Method Selection Guide}{17}{subsection.7.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.3}Lessons Learned}{17}{subsection.7.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.4}Limitations}{18}{subsection.7.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.5}Future Work}{18}{subsection.7.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{References}{18}{section*.15}\protected@file@percent }
+\gdef \@abspage@last{18}

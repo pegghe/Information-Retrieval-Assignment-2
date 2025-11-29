@@ -1,0 +1,817 @@
+\documentclass[11pt,a4paper]{article}
+
+% Page layout
+\usepackage[a4paper,margin=2.5cm,top=3cm,bottom=3cm]{geometry}
+\usepackage{setspace}
+\setlength{\headheight}{14pt}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{multirow}
+
+% Typography and fonts
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{newunicodechar}
+\newunicodechar{✓}{\checkmark}
+\usepackage{amssymb}
+\usepackage{amsmath}
+
+% Graphics and colors
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{float}
+\usepackage{subcaption}
+\definecolor{uablue}{RGB}{0,61,165}
+
+% Links and references
+\usepackage{hyperref}
+\usepackage{xurl}  % Allow URL line breaks
+\hypersetup{
+    colorlinks=true,
+    linkcolor=uablue,
+    citecolor=uablue,
+    urlcolor=uablue,
+    bookmarksnumbered=true
+}
+
+% Code listings
+\usepackage{listings}
+\lstset{
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    frame=single,
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    backgroundcolor=\color{gray!5},
+    captionpos=b,
+    literate={→}{\textrightarrow}1
+}
+
+% Headers and footers
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\textcolor{uablue}{Information Retrieval -- Assignment 2}}
+\fancyhead[R]{\textcolor{uablue}{2024/2025}}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% Title page
+\title{
+    \vspace{-1cm}
+    % \includegraphics[width=0.3\textwidth]{images/logoUantwerpen.png} \\[1cm]
+    {\huge\bfseries\textcolor{uablue}{High-Dimensional Similarity Search}}\\[0.5cm]
+    {\Large Indexing Techniques for Approximate Nearest Neighbours}\\[0.3cm]
+    {\large Assignment 2 -- Information Retrieval}\\
+    {\large Academic Year 2024/2025}
+}
+
+\author{
+    \textbf{Group Members:}\\[0.3cm]
+    \begin{tabular}{ll}
+        Alperen Davran & s0250946 \\
+        Matteo Carlo Comi & s0259766 \\
+        Shakhzodbek Bakhtiyorov & s0242661 \\
+        Amin Borqal & s0259707 \\
+    \end{tabular}\\[1cm]
+    \textbf{University of Antwerp}\\
+    Faculty of Science\\
+    Department of Computer Science
+}
+\date{
+    \today \\[0.5cm]
+    \textbf{GitHub Repository:}\\
+    \href{https://github.com/aminb00/Information-Retrieval-Assignment-2}{\textcolor{uablue}{https://github.com/aminb00/Information-Retrieval-Assignment-2}}
+}
+
+\begin{document}
+
+% Title page
+\maketitle
+\thispagestyle{empty}
+\newpage
+
+% Table of contents
+\tableofcontents
+\newpage
+
+% Set spacing for main content
+\onehalfspacing
+
+% ============================================================
+\section*{Executive Summary}
+\addcontentsline{toc}{section}{Executive Summary}
+
+This assignment implements and benchmarks a complete similarity search pipeline for 
+high-dimensional document embeddings. We developed three custom approximate nearest 
+neighbour (ANN) indexing methods---Vector Quantization (VQ), Product Quantization (PQ), 
+and Locality Sensitive Hashing (LSH)---and compared them against FAISS, a production-grade 
+library widely used in industry.
+
+All methods operate on dense 200-dimensional Word2Vec embeddings of movie plot summaries 
+from the Wikipedia Movies dataset ($N = 17{,}830$ documents).
+We evaluate accuracy--efficiency trade-offs, scalability with respect to both the number 
+of documents and embedding dimensionality, and analyse how close our custom 
+implementations come to FAISS in terms of retrieval quality and query latency.
+
+\textbf{Key findings:}
+\begin{itemize}
+    \item \textbf{VQ} achieves the best balance of accuracy and efficiency among custom implementations, 
+    with Recall@10 = 97.6\% at $n_{\text{probe}} = 20$ while examining only 13.4\% of the corpus.
+    \item \textbf{LSH} can achieve perfect recall (100\%) with appropriate band configuration ($b=16$, $r=8$), 
+    though at the cost of examining most of the corpus.
+    \item \textbf{PQ} provides strong memory compression (up to 200$\times$) but sacrifices accuracy 
+    significantly (max Recall@10 = 33\%).
+    \item \textbf{FAISS-IVF} matches our VQ accuracy while being $\sim$15--40$\times$ faster due to 
+    low-level SIMD optimizations.
+\end{itemize}
+
+% ============================================================
+\section{Dataset and Document Representation}
+
+\subsection{Dataset Selection}
+
+We use the Wikipedia Movies dataset from Kaggle\footnote{\url{https://www.kaggle.com/datasets/exactful/wikipedia-movies}}.  
+The dataset contains detailed information on approximately \textbf{17,830 films}, including:
+\begin{itemize}
+    \item titles and release years,
+    \item plot summaries (free-form text),
+    \item cast and production metadata.
+\end{itemize}
+
+This collection is well-suited for similarity search: movie plots tend to cluster 
+according to genre, themes, and narrative structure, so nearby points in the embedding 
+space intuitively correspond to semantically related films.
+
+\subsection{Vector Embedding Strategy}
+
+\subsubsection{Choice of Embedding Model}
+
+We represent documents using \textbf{Word2Vec} embeddings, for the following reasons:
+
+\begin{itemize}
+    \item \textbf{LSI (Latent Semantic Indexing)} produces lower-dimensional latent 
+    factors, but the resulting vectors are still tied to a sparse term--document space 
+    and capture topical structure rather than fine-grained semantic similarity.
+    \item \textbf{MinHash} is tailored to Jaccard similarity between sets and is 
+    ill-suited for semantic similarity of continuous text.
+    \item \textbf{Word2Vec} yields dense, low-dimensional vectors that capture 
+    semantic relationships and are directly optimised for cosine or Euclidean similarity.
+\end{itemize}
+
+Given our goal of fast similarity search over semantically meaningful representations, 
+Word2Vec is the most appropriate choice.
+
+\subsubsection{Training Configuration}
+
+We train a Word2Vec model on the preprocessed plot summaries with the following 
+configuration:
+
+\begin{lstlisting}[language=Python,caption={Word2Vec configuration}]
+Word2Vec(
+    sentences=tokenized_plots,
+    vector_size=200,      # embedding dimensionality
+    window=5,             # context window size
+    min_count=2,          # minimum word frequency
+    sg=1,                 # skip-gram architecture
+    epochs=10             # training iterations
+)
+\end{lstlisting}
+
+We use the \textbf{skip-gram} architecture because it typically performs better on rare words, 
+which are common in movie-related vocabulary (e.g.\ character names, locations, genre-specific terms).
+
+\subsubsection{Document-Level Representation}
+
+Each document is represented by \textbf{mean pooling} over the embeddings of its tokens:
+
+\[
+\mathbf{d} = \frac{1}{|T_d|} \sum_{w \in T_d} \mathbf{v}(w),
+\]
+
+where $T_d$ is the set of tokens in document $d$, and $\mathbf{v}(w)$ is the Word2Vec 
+embedding for word $w$.  
+This yields a fixed-length \textbf{200-dimensional vector} for every movie plot.
+
+\subsubsection{Optimisation for Similarity Search}
+
+This representation is well-suited for ANN methods because:
+\begin{itemize}
+    \item the vectors are dense and moderately low-dimensional ($d = 200$), enabling 
+    efficient distance computations;
+    \item $L_2$ distance on $\ell_2$-normalised vectors is monotonically related to cosine distance;
+    \item semantic neighbourhoods (similar plots) correspond to geometric neighbourhoods 
+    in the embedding space.
+\end{itemize}
+
+% ============================================================
+\section{Vector Quantization Implementation}
+
+\subsection{Algorithmic Approach}
+
+Vector Quantization (VQ) reduces search cost by partitioning the embedding space into \textbf{Voronoi cells} 
+via $k$-means clustering. Instead of comparing a query to all $N$ documents, we:
+\begin{enumerate}
+    \item cluster the dataset into $c$ centroids during index construction;
+    \item assign each document to its nearest centroid (inverted lists);
+    \item at query time, find the $n_{\text{probe}}$ closest centroids to the query;
+    \item perform exact search only among documents assigned to those centroids.
+\end{enumerate}
+
+This is conceptually equivalent to the \textbf{Inverted File (IVF)} indices used in FAISS.
+
+\subsection{Implementation Details}
+
+\subsubsection{Clustering Library}
+
+We use \texttt{sklearn.cluster.KMeans} because:
+\begin{itemize}
+    \item it provides an efficient, BLAS-optimised implementation;
+    \item it uses $k$-means++ initialization for better convergence;
+    \item it supports reproducible results via random seed control.
+\end{itemize}
+
+\subsubsection{Parameter Selection}
+
+We set:
+\[
+c = 200 \quad \text{clusters}, \qquad 
+n_{\text{probe}} \in \{1, 2, 5, 10, 20\}.
+\]
+
+The choice of $c = 200$ clusters is guided by the heuristic $c \approx \sqrt{N}$ for $N \approx 17{,}830$, 
+which balances:
+\begin{itemize}
+    \item too few clusters $\rightarrow$ large cells, high candidate sets, slower queries;
+    \item too many clusters $\rightarrow$ high overhead and underpopulated cells.
+\end{itemize}
+
+\subsubsection{Distance Metric}
+
+We use Euclidean distance ($L_2$):
+\begin{itemize}
+    \item $k$-means is naturally defined in Euclidean space;
+    \item our vectors are $\ell_2$-normalised, so $\|u - v\|_2^2 = 2(1 - \cos(u,v))$;
+    \item this aligns with FAISS \texttt{IndexIVFFlat}, enabling fair comparison.
+\end{itemize}
+
+\subsection{Query Algorithm}
+
+Given a query vector $\mathbf{q}$:
+
+\begin{enumerate}
+    \item Compute distances to all $c$ centroids: $O(c \cdot d)$.
+    \item Select the $n_{\text{probe}}$ nearest centroids.
+    \item Collect documents in those cells (candidate set).
+    \item Perform exact $L_2$ search within the candidate set.
+\end{enumerate}
+
+The overall complexity is:
+\[
+O(c \cdot d) + O\!\left(n_{\text{probe}} \cdot \frac{N}{c} \cdot d\right).
+\]
+
+\subsection{Experimental Results}
+
+Table~\ref{tab:vq-results} shows VQ performance on our full dataset ($N = 17{,}830$, $d = 200$).
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{} c c c c c @{}}
+\toprule
+\textbf{$n_{\text{probe}}$} & \textbf{Recall@10} & \textbf{nDCG@10} & \textbf{Cand.\ Ratio} & \textbf{Query Time} \\
+\midrule
+1  & 0.428 & 0.572 & 0.70\%  & 0.43\,ms \\
+2  & 0.580 & 0.697 & 1.43\%  & 1.28\,ms \\
+5  & 0.772 & 0.845 & 3.44\%  & 0.79\,ms \\
+10 & 0.900 & 0.934 & 6.91\%  & 0.90\,ms \\
+20 & \textbf{0.976} & \textbf{0.985} & 13.42\% & 1.18\,ms \\
+\bottomrule
+\end{tabular}
+\caption{Vector Quantization results ($c = 200$ clusters).}
+\label{tab:vq-results}
+\end{table}
+
+\textbf{Key observations:}
+\begin{itemize}
+    \item At $n_{\text{probe}} = 20$, we achieve 97.6\% recall while examining only 13.4\% of the corpus.
+    \item The accuracy--efficiency trade-off is smooth: doubling $n_{\text{probe}}$ roughly halves the error.
+    \item Query times remain sub-millisecond even at high recall.
+\end{itemize}
+
+% ============================================================
+\section{Locality Sensitive Hashing Implementation}
+
+\subsection{Theoretical Foundation}
+
+Locality Sensitive Hashing (LSH) offers probabilistic guarantees for ANN search.  
+For cosine similarity, we use \textbf{random hyperplane hashing}:
+
+\[
+h(\mathbf{v}) = \text{sign}(\mathbf{w} \cdot \mathbf{v}), 
+\quad \mathbf{w} \sim \mathcal{N}(0, I_d).
+\]
+
+For two vectors $\mathbf{u}$ and $\mathbf{v}$ with angle $\theta$ between them:
+\[
+\mathbb{P}[h(\mathbf{u}) = h(\mathbf{v})] = 1 - \frac{\theta}{\pi}.
+\]
+
+Vectors with small angles (high cosine similarity) collide with high probability.
+
+\subsection{Band--Row Structure}
+
+We use standard \textbf{banding} to amplify the collision probability gap between similar and 
+dissimilar pairs:
+
+\begin{itemize}
+    \item Total number of hash bits: $m = 128$
+    \item Number of bands: $b \in \{4, 8, 16, 32\}$
+    \item Rows per band: $r = m / b$
+\end{itemize}
+
+Within one band, two vectors must match in \emph{all} $r$ bits to be considered a collision.
+
+\subsection{Parameter Selection Methodology}
+
+We target a cosine similarity threshold of $s = 0.8$ (i.e.\ $\theta \approx 36.9^\circ$) 
+for which we would like high recall.
+
+Let $p = 1 - \theta/\pi$ be the single-bit collision probability.
+For a band of $r$ rows, the probability that all $r$ bits match is $p^r$.
+The probability of at least one band colliding is:
+\[
+R = 1 - (1 - p^r)^b.
+\]
+
+By testing different $(b, r)$ pairs with $m = 128$ bits:
+
+\begin{itemize}
+    \item $b=4,\, r=32$: Very strict matching, low recall
+    \item $b=8,\, r=16$: Good balance, recall $\approx 84\%$
+    \item $b=16,\, r=8$: High recall ($\approx 100\%$), larger candidate sets
+    \item $b=32,\, r=4$: Maximum recall, nearly exhaustive search
+\end{itemize}
+
+\subsection{Experimental Results}
+
+Table~\ref{tab:lsh-results} shows LSH performance with different band configurations.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{} c c c c c c @{}}
+\toprule
+\textbf{Bands} & \textbf{Rows} & \textbf{Recall@10} & \textbf{nDCG@10} & \textbf{Cand.\ Ratio} & \textbf{Query Time} \\
+\midrule
+4  & 32 & 0.260 & 0.403 & 2.39\%  & 0.29\,ms \\
+8  & 16 & 0.838 & 0.889 & 40.70\% & 5.98\,ms \\
+16 & 8  & \textbf{1.000} & \textbf{1.000} & 98.02\% & 11.33\,ms \\
+32 & 4  & \textbf{1.000} & \textbf{1.000} & 100\%   & 13.15\,ms \\
+\bottomrule
+\end{tabular}
+\caption{LSH results ($m = 128$ total hash bits).}
+\label{tab:lsh-results}
+\end{table}
+
+\textbf{Key observations:}
+\begin{itemize}
+    \item LSH achieves \textbf{perfect recall} (100\%) with $b \geq 16$ bands.
+    \item The trade-off is clear: more bands $\rightarrow$ higher recall but larger candidate sets.
+    \item At $b = 8$, we get 83.8\% recall while examining only 40.7\% of the corpus---a reasonable compromise.
+    \item Query times scale with candidate set size (dominated by exact re-ranking).
+\end{itemize}
+
+\subsection{Limitations}
+
+\begin{itemize}
+    \item \textbf{False negatives}: At low band counts, even close neighbours can be missed.
+    \item \textbf{Distance concentration}: In very high dimensions, distances concentrate, 
+    reducing LSH effectiveness. Our $d=200$ is moderate.
+    \item \textbf{Memory}: Storing $m \times N$ bits adds overhead, though for our dataset 
+    this is only $\sim$285\,KB.
+\end{itemize}
+
+% ============================================================
+\section{Product Quantization Implementation}
+
+\subsection{Algorithmic Approach}
+
+Product Quantization (PQ) compresses vectors by:
+\begin{enumerate}
+    \item Splitting each $d$-dimensional vector into $m$ sub-vectors of dimension $d/m$
+    \item Learning $k$ centroids for each subspace via $k$-means
+    \item Encoding each sub-vector with the index of its nearest centroid (1 byte for $k=256$)
+\end{enumerate}
+
+This achieves a compression ratio of $\frac{d \times 4}{m} = \frac{d}{m} \times 4$ bytes 
+(from 32-bit floats to 8-bit codes).
+
+\subsection{Distance Computation}
+
+At query time, we use \textbf{asymmetric distance computation (ADC)}:
+\begin{enumerate}
+    \item Precompute distances from query sub-vectors to all centroids: $O(m \times k \times d/m) = O(k \times d)$
+    \item For each database vector, sum up precomputed distances using codes: $O(m)$ per vector
+    \item Total: $O(k \times d + N \times m)$
+\end{enumerate}
+
+\subsection{Experimental Results}
+
+Table~\ref{tab:pq-results} shows PQ performance with different subspace configurations.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{} c c c c c c @{}}
+\toprule
+\textbf{$m$ subvectors} & \textbf{Recall@10} & \textbf{nDCG@10} & \textbf{Compression} & \textbf{Query Time} \\
+\midrule
+2  & 0.172 & 0.200 & 200$\times$ & 1.23\,ms \\
+4  & 0.264 & 0.368 & 100$\times$ & 1.44\,ms \\
+8  & \textbf{0.330} & \textbf{0.436} & 50$\times$  & 1.74\,ms \\
+\bottomrule
+\end{tabular}
+\caption{Product Quantization results ($k = 256$ centroids per subspace).}
+\label{tab:pq-results}
+\end{table}
+
+\textbf{Key observations:}
+\begin{itemize}
+    \item PQ achieves significant compression (50--200$\times$) but at substantial accuracy cost.
+    \item Maximum Recall@10 of 33\% is inadequate for most applications.
+    \item The quantization error is too high for our 200-dimensional vectors with only 2--8 subspaces.
+    \item PQ is typically combined with IVF (IVFPQ) to first narrow candidates, then use PQ for fast scoring.
+\end{itemize}
+
+\subsection{Limitations}
+
+The standalone PQ implementation underperforms because:
+\begin{itemize}
+    \item With $m=8$ subspaces, each has only 25 dimensions---too coarse for accurate distance approximation.
+    \item PQ works best with more subspaces (e.g., $m=32$ or $m=64$), but our $d=200$ doesn't divide evenly.
+    \item Without IVF pre-filtering, PQ must scan all vectors, losing any efficiency benefit.
+\end{itemize}
+
+% ============================================================
+\section{FAISS: Production-Grade Indexing}
+
+\subsection{Overview}
+
+FAISS (Facebook AI Similarity Search) is an open-source library developed by Meta AI Research 
+for efficient similarity search and clustering of dense vectors~[2].
+
+Key properties:
+\begin{itemize}
+    \item Supports millions to billions of vectors
+    \item Provides CPU and GPU implementations
+    \item Offers multiple index types for different use cases
+    \item Implemented in highly optimised C++ with Python bindings
+\end{itemize}
+
+\subsection{Index Types Used}
+
+We evaluate three FAISS index families that mirror our custom implementations:
+
+\subsubsection{IndexIVFFlat (Inverted File with Flat Quantizer)}
+
+Analogous to our VQ implementation:
+\begin{itemize}
+    \item Partitions space into \texttt{nlist} Voronoi cells
+    \item At query time, searches \texttt{nprobe} nearest cells
+    \item Stores original vectors (no compression)
+\end{itemize}
+
+\subsubsection{IndexIVFPQ (IVF + Product Quantization)}
+
+Combines coarse quantization with PQ compression:
+\begin{itemize}
+    \item Uses IVF for candidate selection
+    \item Uses PQ for compressed storage and fast scoring
+    \item Provides memory--accuracy trade-off
+\end{itemize}
+
+\subsubsection{IndexLSH}
+
+FAISS's binary LSH implementation:
+\begin{itemize}
+    \item Projects vectors to binary codes via random hyperplanes
+    \item Uses Hamming distance for fast comparison
+    \item Configurable number of bits
+\end{itemize}
+
+\subsection{FAISS Experimental Results}
+
+Table~\ref{tab:faiss-ivf} shows FAISS-IVF performance (100 clusters).
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{} c c c c c @{}}
+\toprule
+\textbf{$n_{\text{probe}}$} & \textbf{Recall@10} & \textbf{nDCG@10} & \textbf{Cand.\ Ratio} & \textbf{Query Time} \\
+\midrule
+1  & 0.470 & 0.608 & 1\%  & 12.6\,$\mu$s \\
+2  & 0.638 & 0.746 & 2\%  & 17.3\,$\mu$s \\
+5  & 0.886 & 0.925 & 5\%  & 30.5\,$\mu$s \\
+10 & 0.964 & 0.976 & 10\% & 48.2\,$\mu$s \\
+20 & \textbf{0.988} & \textbf{0.992} & 20\% & 83.5\,$\mu$s \\
+\bottomrule
+\end{tabular}
+\caption{FAISS-IVF (IndexIVFFlat) results.}
+\label{tab:faiss-ivf}
+\end{table}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{} c c c c @{}}
+\toprule
+\textbf{Index Type} & \textbf{Best Recall@10} & \textbf{Best nDCG@10} & \textbf{Query Time} \\
+\midrule
+FAISS-IVFPQ & 0.388 & 0.501 & 28.4\,$\mu$s \\
+FAISS-LSH (512 bits) & 0.264 & 0.378 & 88.9\,$\mu$s \\
+\bottomrule
+\end{tabular}
+\caption{FAISS-IVFPQ and FAISS-LSH results.}
+\label{tab:faiss-other}
+\end{table}
+
+\textbf{Key observations:}
+\begin{itemize}
+    \item FAISS-IVF achieves 98.8\% recall with query times in \textbf{microseconds}---15--40$\times$ faster than our VQ.
+    \item FAISS-IVFPQ underperforms due to the same PQ accuracy limitations.
+    \item FAISS-LSH also shows low recall, suggesting the binary projection loses too much information for our embeddings.
+\end{itemize}
+
+\subsection{Performance Characteristics}
+
+FAISS achieves its speed through:
+\begin{itemize}
+    \item \textbf{SIMD vectorisation} (AVX2/AVX-512) for batched distance computations
+    \item \textbf{Cache-friendly memory layouts}
+    \item \textbf{Multi-threading} on CPU
+    \item \textbf{CUDA kernels} on GPU (not used in our experiments)
+\end{itemize}
+
+% ============================================================
+\section{Benchmarking and Comparison}
+
+\subsection{Experimental Setup}
+
+\subsubsection{Environment}
+\begin{lstlisting}[language=bash,caption={Software environment}]
+Python        3.12
+NumPy         1.26.4
+scikit-learn  1.4.2
+faiss-cpu     1.7.4
+gensim        4.3.2  # for Word2Vec
+\end{lstlisting}
+
+Hardware: Standard x86-64 CPU, 16\,GB RAM, no GPU.
+
+\subsubsection{Evaluation Protocol}
+\begin{itemize}
+    \item 50 random query documents per configuration
+    \item Ground truth: exact brute-force search (FAISS IndexFlatL2)
+    \item Metrics: Recall@10, nDCG@10, candidate ratio, query time
+    \item All experiments use \texttt{np.random.seed(42)} for reproducibility
+\end{itemize}
+
+\subsection{Experiment 1: Accuracy vs.\ Efficiency Trade-off}
+
+Figure~\ref{fig:accuracy-efficiency} compares our three custom implementations on the full dataset.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/comparison_accuracy_efficiency.png}
+    \caption{Accuracy vs.\ efficiency trade-off for VQ, PQ, and LSH. Left: Recall vs.\ candidate ratio. 
+    Middle: nDCG vs.\ candidate ratio. Right: Recall vs.\ query time.}
+    \label{fig:accuracy-efficiency}
+\end{figure}
+
+\textbf{Analysis:}
+\begin{itemize}
+    \item \textbf{VQ} offers the best accuracy--efficiency trade-off: high recall with small candidate sets.
+    \item \textbf{LSH} can reach 100\% recall but requires examining most of the corpus.
+    \item \textbf{PQ} cannot exceed 33\% recall regardless of configuration---inadequate for retrieval.
+\end{itemize}
+
+\subsection{Experiment 2: Scaling with Dataset Size}
+
+We measure how build time and query time scale as $N$ increases from 1{,}000 to 17{,}830.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/comparison_scaling_N.png}
+    \caption{Scaling behaviour with dataset size. Left: Index construction time. Right: Query time.}
+    \label{fig:scaling-n}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{} l c c c c c @{}}
+\toprule
+\textbf{Method} & \textbf{1K} & \textbf{2K} & \textbf{5K} & \textbf{10K} & \textbf{17.8K} \\
+\midrule
+\multicolumn{6}{c}{\textit{Build Time (seconds)}} \\
+\midrule
+VQ  & 0.050 & 0.236 & 0.538 & 1.138 & 2.091 \\
+PQ  & 0.132 & 0.260 & 0.575 & 0.988 & 2.274 \\
+LSH & 0.022 & 0.026 & 0.102 & 0.162 & 0.299 \\
+FAISS-IVF & 0.004 & 0.004 & 0.008 & 0.016 & 0.029 \\
+\midrule
+\multicolumn{6}{c}{\textit{Query Time (milliseconds)}} \\
+\midrule
+VQ  & 0.32 & 0.27 & 0.35 & 0.73 & 0.65 \\
+PQ  & 0.38 & 0.47 & 0.77 & 0.86 & 1.46 \\
+LSH & 0.35 & 1.29 & 3.72 & 5.57 & 7.35 \\
+FAISS-IVF & 0.009 & 0.009 & 0.013 & 0.020 & 0.028 \\
+\bottomrule
+\end{tabular}
+\caption{Build and query times across dataset sizes (best configurations).}
+\label{tab:scaling-n}
+\end{table}
+
+\textbf{Observations:}
+\begin{itemize}
+    \item Build time scales approximately linearly with $N$ for all methods.
+    \item LSH has the fastest build time among custom implementations (no clustering needed).
+    \item VQ query time scales sub-linearly due to cluster pruning.
+    \item LSH query time scales with candidate set size, which grows with $N$.
+    \item FAISS is 50--100$\times$ faster in both build and query time.
+\end{itemize}
+
+\subsection{Experiment 3: Scaling with Dimensionality}
+
+We vary $d \in \{50, 100, 200\}$ while keeping $N = 10{,}000$ fixed.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/comparison_scaling_dim.png}
+    \caption{Scaling behaviour with embedding dimensionality.}
+    \label{fig:scaling-dim}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{} l c c c | c c c @{}}
+\toprule
+& \multicolumn{3}{c|}{\textbf{Build Time (s)}} & \multicolumn{3}{c}{\textbf{Query Time (ms)}} \\
+\textbf{Method} & $d$=50 & $d$=100 & $d$=200 & $d$=50 & $d$=100 & $d$=200 \\
+\midrule
+VQ  & 0.225 & 0.382 & 0.982 & 0.34 & 0.43 & 0.59 \\
+PQ  & 0.479 & 0.516 & 1.178 & 0.70 & 0.74 & 1.13 \\
+LSH & 0.138 & 0.215 & 0.232 & 3.91 & 4.26 & 3.35 \\
+FAISS-IVF & 0.014 & 0.014 & 0.016 & 0.009 & 0.013 & 0.021 \\
+\bottomrule
+\end{tabular}
+\caption{Scaling with dimensionality ($N = 10{,}000$).}
+\label{tab:scaling-dim}
+\end{table}
+
+\textbf{Observations:}
+\begin{itemize}
+    \item VQ and PQ build times scale roughly linearly with $d$ (dominated by $k$-means).
+    \item LSH is relatively robust to $d$ since signatures have fixed length.
+    \item Query times show moderate linear scaling with $d$ due to $O(d)$ distance computations.
+    \item FAISS's vectorised operations mitigate dimensional scaling.
+\end{itemize}
+
+\subsection{Summary Comparison}
+
+Figure~\ref{fig:summary} provides an overview of best-case performance for each method.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/comparison_summary.png}
+    \caption{Summary comparison: Best recall, nDCG, build time, and query time per method.}
+    \label{fig:summary}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\textwidth}{@{} l X c c c c @{}}
+\toprule
+\textbf{Method} & \textbf{Best Config} & \textbf{Recall@10} & \textbf{nDCG@10} & \textbf{Query Time} & \textbf{Build Time} \\
+\midrule
+VQ & $n_{\text{probe}}$=20, $c$=200 & 0.976 & 0.985 & 1.18\,ms & 2.09\,s \\
+LSH & $b$=16, $r$=8 & 1.000 & 1.000 & 11.33\,ms & 0.30\,s \\
+PQ & $m$=8, $k$=256 & 0.330 & 0.436 & 1.74\,ms & 2.27\,s \\
+\midrule
+FAISS-IVF & nprobe=20, nlist=100 & 0.988 & 0.992 & 83.5\,$\mu$s & 0.03\,s \\
+FAISS-IVFPQ & nprobe=20 & 0.388 & 0.501 & 28.4\,$\mu$s & 0.70\,s \\
+FAISS-LSH & 512 bits & 0.264 & 0.378 & 88.9\,$\mu$s & 2.4\,ms \\
+\bottomrule
+\end{tabularx}
+\caption{Summary of best configurations across all methods.}
+\label{tab:summary-all}
+\end{table}
+
+% ============================================================
+\section{Discussion and Conclusions}
+
+\subsection{Key Findings}
+
+\begin{enumerate}
+    \item \textbf{VQ is the most practical custom implementation.}
+    It achieves 97.6\% recall while examining only 13.4\% of the corpus, with sub-millisecond queries.
+    
+    \item \textbf{LSH can achieve perfect recall} but requires examining most documents.
+    The probabilistic nature means there's a trade-off between recall and candidate set size.
+    
+    \item \textbf{Standalone PQ is inadequate for retrieval.}
+    The quantization error is too high; PQ should be combined with IVF for pre-filtering.
+    
+    \item \textbf{FAISS dominates in speed.}
+    FAISS-IVF achieves similar accuracy to our VQ while being 15--40$\times$ faster,
+    demonstrating the value of low-level optimisation.
+    
+    \item \textbf{FAISS-LSH and FAISS-IVFPQ underperform} on our dataset,
+    likely due to the specific characteristics of our Word2Vec embeddings.
+\end{enumerate}
+
+\subsection{Method Selection Guide}
+
+Based on our experiments:
+
+\begin{itemize}
+    \item \textbf{Use VQ/IVF} when high accuracy is required and memory is not the bottleneck.
+    Best for interactive search over medium-to-large datasets.
+    
+    \item \textbf{Use LSH} when you need guaranteed high recall and can tolerate larger candidate sets.
+    Good for batch processing where latency is less critical.
+    
+    \item \textbf{Avoid standalone PQ} for direct retrieval; use IVFPQ if memory is constrained.
+    
+    \item \textbf{Use FAISS} for production systems---it provides the same algorithmic approaches
+    with orders-of-magnitude better performance.
+\end{itemize}
+
+\subsection{Lessons Learned}
+
+\begin{itemize}
+    \item \textbf{Big-O is not everything.} Constant factors from implementation details
+    (vectorisation, memory layout, language runtime) dominate in practice.
+    
+    \item \textbf{Approximate search can match exact search.} With 97--98\% recall,
+    users cannot distinguish ANN from exact search, yet queries are orders of magnitude faster.
+    
+    \item \textbf{Parameter tuning matters.} The same algorithm can perform very differently
+    depending on configuration (e.g., LSH with 4 vs.\ 16 bands).
+    
+    \item \textbf{Systematic benchmarking is essential.} Performance trade-offs are often
+    non-obvious and depend on dataset characteristics.
+\end{itemize}
+
+\subsection{Limitations}
+
+\begin{itemize}
+    \item Our dataset ($N \approx 18{,}000$) is moderate; million-scale experiments would better
+    stress the algorithms.
+    \item We only tested Word2Vec embeddings; results may differ for other embedding types
+    (BERT, image features, etc.).
+    \item All experiments were CPU-only; GPU-accelerated FAISS would widen the performance gap.
+    \item We assumed static indices; dynamic updates were not benchmarked.
+\end{itemize}
+
+\subsection{Future Work}
+
+Potential extensions include:
+\begin{itemize}
+    \item Implementing graph-based indices (HNSW) for comparison
+    \item Exploring dynamic index maintenance with incremental updates
+    \item Testing on larger datasets and different embedding types
+    \item GPU-accelerated FAISS experiments
+\end{itemize}
+
+% ============================================================
+\section*{References}
+\addcontentsline{toc}{section}{References}
+
+\begin{enumerate}
+    \item Manning, C. D., Raghavan, P., \& Sch\"{u}tze, H. (2008). 
+    \textit{Introduction to Information Retrieval}. Cambridge University Press.
+    \url{https://nlp.stanford.edu/IR-book/}
+    
+    \item Johnson, J., Douze, M., \& J\'{e}gou, H. (2019).
+    \textit{Billion-scale similarity search with GPUs}.
+    IEEE Transactions on Big Data.
+    
+    \item J\'{e}gou, H., Douze, M., \& Schmid, C. (2011).
+    \textit{Product quantization for nearest neighbor search}.
+    IEEE Transactions on Pattern Analysis and Machine Intelligence.
+    
+    \item Andoni, A., \& Indyk, P. (2008).
+    \textit{Near-optimal hashing algorithms for approximate nearest neighbor in high dimensions}.
+    Communications of the ACM.
+    
+    \item FAISS Library: \url{https://github.com/facebookresearch/faiss}
+    
+    \item Wikipedia Movies Dataset: \url{https://www.kaggle.com/datasets/exactful/wikipedia-movies}
+    
+    \item Calders, T., \& Tokpo, E. (n.d.). 
+    \textit{Information Retrieval: Indexing and Similarity Search}. 
+    Lecture slides, University of Antwerp.
+\end{enumerate}
+
+\end{document}
