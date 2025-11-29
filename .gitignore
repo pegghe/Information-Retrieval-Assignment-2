@@ -1,0 +1,135 @@
+# ========================================
+# Python
+# ========================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv/
+
+# ========================================
+# Jupyter Notebook
+# ========================================
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+*.ipynb_checkpoints
+
+# ========================================
+# IDE / Editors
+# ========================================
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# ========================================
+# OS generated files
+# ========================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ========================================
+# LaTeX auxiliary files
+# ========================================
+Documentation/*.aux
+Documentation/*.log
+Documentation/*.out
+Documentation/*.toc
+Documentation/*.lot
+Documentation/*.lof
+Documentation/*.bbl
+Documentation/*.blg
+Documentation/*.synctex.gz
+Documentation/*.fdb_latexmk
+Documentation/*.fls
+Documentation/*.nav
+Documentation/*.snm
+Documentation/*.vrb
+Documentation/*.bcf
+Documentation/*.run.xml
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
+
+# Keep the PDF (comment out if you don't want to track it)
+# Documentation/*.pdf
+
+# ========================================
+# Data files (optional - uncomment if needed)
+# ========================================
+# Large data files
+# Data/raw/*.csv
+# Data/processed/*.pkl
+# Data/processed/*.npy
+
+# Model files
+# *.model
+# *.bin
+
+# ========================================
+# Temporary files
+# ========================================
+*.tmp
+*.temp
+*.bak
+*.cache
+.cache/
+
+# ========================================
+# Test / Coverage
+# ========================================
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# ========================================
+# Misc
+# ========================================
+*.log
+*.sqlite3
+.env
+.env.local
+*.local
+

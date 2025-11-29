@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2025.1.15)  29 NOV 2025 11:31
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2025.1.15)  29 NOV 2025 12:50
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -633,17 +633,17 @@ LaTeX Font Info:    External font `lmex10' loaded for size
 
  [3]
 LaTeX Font Info:    Trying to load font information for TS1+lmr on input line 1
-21.
+23.
 
 (/usr/local/texlive/2024/texmf-dist/tex/latex/lm/ts1lmr.fd
 File: ts1lmr.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <9> on input line 136.
+(Font)              <9> on input line 138.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <5> on input line 136.
+(Font)              <5> on input line 138.
 LaTeX Font Info:    Trying to load font information for T1+lmtt on input line 1
-36.
+38.
 
 (/usr/local/texlive/2024/texmf-dist/tex/latex/lm/t1lmtt.fd
 File: t1lmtt.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
@@ -651,7 +651,7 @@ File: t1lmtt.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 local/texlive/2024/texmf-dist/fonts/enc/dvips/lm/lm-rm.enc}{/usr/local/texlive/
 2024/texmf-dist/fonts/enc/dvips/lm/lm-ts1.enc}{/usr/local/texlive/2024/texmf-di
 st/fonts/enc/dvips/lm/lm-mathsy.enc}]
-Overfull \hbox (8.56116pt too wide) in paragraph at lines 164--166
+Overfull \hbox (8.56116pt too wide) in paragraph at lines 166--168
 []\T1/lmr/m/n/10.95 Given our goal of fast sim-i-lar-ity search over se-man-ti-
 cally mean-ing-ful rep-re-sen-ta-tions, Word2Vec
  []
@@ -660,69 +660,124 @@ cally mean-ing-ful rep-re-sen-ta-tions, Word2Vec
 File: lstlang1.sty 2024/02/21 1.10 listings language file
 )
 Package hyperref Info: bookmark level for unknown lstlisting defaults to 0 on i
-nput line 172.
+nput line 174.
  [5{/usr/local/texlive/2024/texmf-dist/fonts/enc/dvips/lm/lm-mathex.enc}] [6] [
 7] [8]
-[9] [10] [11]
+[9] [10] [11] [12] [13]
 (/usr/local/texlive/2024/texmf-dist/tex/latex/listings/lstlang1.sty
 File: lstlang1.sty 2024/02/21 1.10 listings language file
 )
 (/usr/local/texlive/2024/texmf-dist/tex/latex/listings/lstlang1.sty
 File: lstlang1.sty 2024/02/21 1.10 listings language file
-) [12]
-<images/comparison_accuracy_efficiency.png, id=366, 1149.093pt x 353.03896pt>
-File: images/comparison_accuracy_efficiency.png Graphic file (type png)
-<use images/comparison_accuracy_efficiency.png>
-Package pdftex.def Info: images/comparison_accuracy_efficiency.png  used on inp
-ut line 585.
-(pdftex.def)             Requested size: 455.24411pt x 139.86633pt.
-<images/comparison_scaling_N.png, id=368, 1004.553pt x 353.03896pt>
-File: images/comparison_scaling_N.png Graphic file (type png)
-<use images/comparison_scaling_N.png>
-Package pdftex.def Info: images/comparison_scaling_N.png  used on input line 60
-4.
-(pdftex.def)             Requested size: 455.24411pt x 159.99193pt.
+)
+<images/exp1_recall_vs_candidate_ratio.png, id=423, 569.84895pt x 425.30894pt>
+File: images/exp1_recall_vs_candidate_ratio.png Graphic file (type png)
+<use images/exp1_recall_vs_candidate_ratio.png>
+Package pdftex.def Info: images/exp1_recall_vs_candidate_ratio.png  used on inp
+ut line 654.
+(pdftex.def)             Requested size: 218.51521pt x 163.08574pt.
+<images/exp1_ndcg_vs_candidate_ratio.png, id=425, 569.84895pt x 425.30894pt>
+File: images/exp1_ndcg_vs_candidate_ratio.png Graphic file (type png)
+<use images/exp1_ndcg_vs_candidate_ratio.png>
+Package pdftex.def Info: images/exp1_ndcg_vs_candidate_ratio.png  used on input
+ line 659.
+(pdftex.def)             Requested size: 218.51521pt x 163.08574pt.
+ [14]
+<images/exp1_recall_vs_query_time.png, id=436, 569.84895pt x 422.41815pt>
+File: images/exp1_recall_vs_query_time.png Graphic file (type png)
+<use images/exp1_recall_vs_query_time.png>
+Package pdftex.def Info: images/exp1_recall_vs_query_time.png  used on input li
+ne 668.
+(pdftex.def)             Requested size: 273.14923pt x 202.48125pt.
+<images/exp2_build_time_vs_N.png, id=437, 569.84895pt x 425.30894pt>
+File: images/exp2_build_time_vs_N.png Graphic file (type png)
+<use images/exp2_build_time_vs_N.png>
+Package pdftex.def Info: images/exp2_build_time_vs_N.png  used on input line 68
+8.
+(pdftex.def)             Requested size: 218.51521pt x 163.08574pt.
+<images/exp2_query_time_vs_N.png, id=438, 569.12625pt x 425.30894pt>
+File: images/exp2_query_time_vs_N.png Graphic file (type png)
+<use images/exp2_query_time_vs_N.png>
+Package pdftex.def Info: images/exp2_query_time_vs_N.png  used on input line 69
+3.
+(pdftex.def)             Requested size: 218.51521pt x 163.2999pt.
 
-[13 <./images/comparison_accuracy_efficiency.png>]
-<images/comparison_scaling_dim.png, id=382, 1004.553pt x 353.03896pt>
-File: images/comparison_scaling_dim.png Graphic file (type png)
-<use images/comparison_scaling_dim.png>
-Package pdftex.def Info: images/comparison_scaling_dim.png  used on input line 
-649.
-(pdftex.def)             Requested size: 455.24411pt x 159.99193pt.
- [14 <./images/comparison_scaling_N.png>]
-<images/comparison_summary.png, id=391, 1004.553pt x 714.38895pt>
-File: images/comparison_summary.png Graphic file (type png)
-<use images/comparison_summary.png>
-Package pdftex.def Info: images/comparison_summary.png  used on input line 685.
+[15 <./images/exp1_recall_vs_candidate_ratio.png> <./images/exp1_ndcg_vs_candid
+ate_ratio.png> <./images/exp1_recall_vs_query_time.png>]
+<images/exp3_build_time_vs_dim.png, id=448, 569.84895pt x 425.30894pt>
+File: images/exp3_build_time_vs_dim.png Graphic file (type png)
+<use images/exp3_build_time_vs_dim.png>
+Package pdftex.def Info: images/exp3_build_time_vs_dim.png  used on input line 
+741.
+(pdftex.def)             Requested size: 218.51521pt x 163.08574pt.
+<images/exp3_query_time_vs_dim.png, id=449, 569.12625pt x 425.30894pt>
+File: images/exp3_query_time_vs_dim.png Graphic file (type png)
+<use images/exp3_query_time_vs_dim.png>
+Package pdftex.def Info: images/exp3_query_time_vs_dim.png  used on input line 
+746.
+(pdftex.def)             Requested size: 218.51521pt x 163.2999pt.
+ [16 <./images/exp2_build_time_vs_N.png> <./images/exp2_query_time_vs_N.png>]
+<images/summary_best_recall.png, id=460, 569.84895pt x 425.30894pt>
+File: images/summary_best_recall.png Graphic file (type png)
+<use images/summary_best_recall.png>
+Package pdftex.def Info: images/summary_best_recall.png  used on input line 785
+.
+(pdftex.def)             Requested size: 218.51521pt x 163.08574pt.
+<images/summary_best_ndcg.png, id=461, 569.84895pt x 425.30894pt>
+File: images/summary_best_ndcg.png Graphic file (type png)
+<use images/summary_best_ndcg.png>
+Package pdftex.def Info: images/summary_best_ndcg.png  used on input line 790.
+(pdftex.def)             Requested size: 218.51521pt x 163.08574pt.
+ [17 <./images/exp3_build_time_vs_dim.png> <./images/exp3_query_time_vs_dim.png
+>]
+<images/summary_build_time.png, id=472, 569.84895pt x 425.30894pt>
+File: images/summary_build_time.png Graphic file (type png)
+<use images/summary_build_time.png>
+Package pdftex.def Info: images/summary_build_time.png  used on input line 800.
 
-(pdftex.def)             Requested size: 455.24411pt x 323.75029pt.
- [15 <./images/comparison_scaling_dim.png>]
-Underfull \hbox (badness 10000) in paragraph at lines 705--705
+(pdftex.def)             Requested size: 218.51521pt x 163.08574pt.
+LaTeX Font Info:    External font `lmex10' loaded for size
+(Font)              <10> on input line 801.
+LaTeX Font Info:    External font `lmex10' loaded for size
+(Font)              <7> on input line 801.
+<images/summary_query_time.png, id=473, 569.12625pt x 425.30894pt>
+File: images/summary_query_time.png Graphic file (type png)
+<use images/summary_query_time.png>
+Package pdftex.def Info: images/summary_query_time.png  used on input line 805.
+
+(pdftex.def)             Requested size: 218.51521pt x 163.2999pt.
+<images/pr_ndcg_vs_recall.png, id=474, 569.84895pt x 425.30894pt>
+File: images/pr_ndcg_vs_recall.png Graphic file (type png)
+<use images/pr_ndcg_vs_recall.png>
+Package pdftex.def Info: images/pr_ndcg_vs_recall.png  used on input line 814.
+(pdftex.def)             Requested size: 273.14923pt x 203.86691pt.
+ [18 <./images/summary_best_recall.png> <./images/summary_best_ndcg.png> <./ima
+ges/summary_build_time.png> <./images/summary_query_time.png>]
+Underfull \hbox (badness 10000) in paragraph at lines 835--835
 []|$\OML/lmm/m/it/10.95 n[]$\T1/lmr/m/n/10.95 =20,
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 705--705
+Underfull \hbox (badness 10000) in paragraph at lines 835--835
 []|\T1/lmr/m/n/10.95 nprobe=20,
  []
 
-[16 <./images/comparison_summary.png>] [17] [18] (./main.aux)
+[19 <./images/pr_ndcg_vs_recall.png>] [20] [21] (./main.aux)
  ***********
 LaTeX2e <2023-11-01> patch level 1
 L3 programming layer <2024-02-20>
  ***********
 Package rerunfilecheck Info: File `main.out' has not changed.
-(rerunfilecheck)             Checksum: 4308A7F4A78D5EFE69F13DD50FB9E05D;10029.
+(rerunfilecheck)             Checksum: 7E1DBA9CE4931EAFAFE819296011D087;11982.
  ) 
 Here is how much of TeX's memory you used:
- 15100 strings out of 474116
- 232565 string characters out of 5743682
+ 15218 strings out of 474116
+ 235752 string characters out of 5743682
  1977187 words of memory out of 5000000
- 37092 multiletter control sequences out of 15000+600000
- 643116 words of font info for 93 fonts, out of 8000000 for 9000
+ 37187 multiletter control sequences out of 15000+600000
+ 659969 words of font info for 106 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 75i,15n,79p,411b,2097s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 75i,15n,79p,411b,1359s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2024/texmf-dist/fonts/type1/public/lm/lmbx10.pfb></usr/lo
 cal/texlive/2024/texmf-dist/fonts/type1/public/lm/lmbx12.pfb></usr/local/texliv
 e/2024/texmf-dist/fonts/type1/public/lm/lmbx8.pfb></usr/local/texlive/2024/texm
@@ -739,10 +794,10 @@ lmsy8.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/lm/lmtt10.pfb>
 </usr/local/texlive/2024/texmf-dist/fonts/type1/public/lm/lmtt9.pfb></usr/local
 /texlive/2024/texmf-dist/fonts/type1/public/lm/lmtti10.pfb></usr/local/texlive/
 2024/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on main.pdf (18 pages, 937559 bytes).
+Output written on main.pdf (21 pages, 1272574 bytes).
 PDF statistics:
- 549 PDF objects out of 1000 (max. 8388607)
- 476 compressed objects within 5 object streams
- 124 named destinations out of 1000 (max. 500000)
- 421 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 637 PDF objects out of 1000 (max. 8388607)
+ 544 compressed objects within 6 object streams
+ 142 named destinations out of 1000 (max. 500000)
+ 541 words of extra memory for PDF output out of 10000 (max. 10000000)
 

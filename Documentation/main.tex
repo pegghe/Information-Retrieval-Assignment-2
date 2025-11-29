@@ -112,19 +112,21 @@ library widely used in industry.
 
 All methods operate on dense 200-dimensional Word2Vec embeddings of movie plot summaries 
 from the Wikipedia Movies dataset ($N = 17{,}830$ documents).
-We evaluate accuracy--efficiency trade-offs, scalability with respect to both the number 
+Following the evaluation framework from Manning et al.~[1] (Chapter 8), we assess 
+retrieval quality using \textbf{Recall@k}, \textbf{Precision@k}, \textbf{F1@k}, and \textbf{nDCG@k}.
+We evaluate recall--efficiency trade-offs, scalability with respect to both the number 
 of documents and embedding dimensionality, and analyse how close our custom 
 implementations come to FAISS in terms of retrieval quality and query latency.
 
 \textbf{Key findings:}
 \begin{itemize}
-    \item \textbf{VQ} achieves the best balance of accuracy and efficiency among custom implementations, 
+    \item \textbf{VQ} achieves the best balance of recall and efficiency among custom implementations, 
     with Recall@10 = 97.6\% at $n_{\text{probe}} = 20$ while examining only 13.4\% of the corpus.
     \item \textbf{LSH} can achieve perfect recall (100\%) with appropriate band configuration ($b=16$, $r=8$), 
     though at the cost of examining most of the corpus.
-    \item \textbf{PQ} provides strong memory compression (up to 200$\times$) but sacrifices accuracy 
+    \item \textbf{PQ} provides strong memory compression (up to 200$\times$) but sacrifices recall 
     significantly (max Recall@10 = 33\%).
-    \item \textbf{FAISS-IVF} matches our VQ accuracy while being $\sim$15--40$\times$ faster due to 
+    \item \textbf{FAISS-IVF} matches our VQ recall while being $\sim$15--40$\times$ faster due to 
     low-level SIMD optimizations.
 \end{itemize}
 
@@ -205,6 +207,70 @@ This representation is well-suited for ANN methods because:
     \item semantic neighbourhoods (similar plots) correspond to geometric neighbourhoods 
     in the embedding space.
 \end{itemize}
+
+% ============================================================
+\section{Evaluation Metrics}
+
+Following the standard evaluation framework from Manning et al.~[1], 
+Chapter 8, we employ the following metrics for assessing retrieval quality.
+
+\subsection{Metrics for Ranked Retrieval}
+
+\subsubsection{Precision@k and Recall@k}
+
+For a ranked list of retrieved documents:
+\begin{align}
+\text{Precision@}k &= \frac{|\{\text{relevant docs in top-}k\}|}{k} \\
+\text{Recall@}k &= \frac{|\{\text{relevant docs in top-}k\}|}{|\{\text{all relevant docs}\}|}
+\end{align}
+
+\textbf{Note on ANN evaluation:} In approximate nearest neighbour search, we define 
+``relevant documents'' as the $k$ exact nearest neighbours (ground truth from brute-force search).
+Since we retrieve exactly $k$ documents and there are exactly $k$ relevant documents, 
+\textbf{Precision@k = Recall@k} in our experiments.
+
+\subsubsection{F1@k}
+
+The harmonic mean of Precision and Recall:
+\[
+F_1@k = \frac{2 \cdot P@k \cdot R@k}{P@k + R@k}
+\]
+
+When $P@k = R@k$ (as in our ANN context), $F_1@k = P@k = R@k$.
+
+\subsubsection{Normalized Discounted Cumulative Gain (nDCG@k)}
+
+Measures ranking quality by rewarding relevant documents appearing at higher positions:
+\[
+\text{DCG@}k = \sum_{i=1}^{k} \frac{\text{rel}_i}{\log_2(i+1)}, \qquad
+\text{nDCG@}k = \frac{\text{DCG@}k}{\text{IDCG@}k}
+\]
+
+where $\text{rel}_i = 1$ if document at position $i$ is in the true top-$k$, and 
+IDCG is the ideal DCG achieved by perfect ranking.
+
+\subsection{Efficiency Metrics}
+
+\subsubsection{Candidate Ratio}
+The fraction of the corpus examined before returning results:
+\[
+\text{Candidate Ratio} = \frac{|\text{candidates examined}|}{N}
+\]
+
+Lower values indicate better efficiency.
+
+\subsubsection{Query Time}
+Wall-clock time per query, averaged over multiple queries.
+
+\subsubsection{Build Time}
+Time to construct the index from the document collection.
+
+\subsection{Why Not Classical Accuracy?}
+
+Following Manning et al., we \textbf{do not use accuracy} ($\frac{TP + TN}{TP + TN + FP + FN}$) 
+because it is dominated by true negatives in retrieval tasks. A system that returns nothing 
+achieves $\sim$99.99\% accuracy on a corpus of 17,830 documents when retrieving 10---clearly 
+a useless metric for IR evaluation.
 
 % ============================================================
 \section{Vector Quantization Implementation}
@@ -297,7 +363,7 @@ Table~\ref{tab:vq-results} shows VQ performance on our full dataset ($N = 17{,}8
 \textbf{Key observations:}
 \begin{itemize}
     \item At $n_{\text{probe}} = 20$, we achieve 97.6\% recall while examining only 13.4\% of the corpus.
-    \item The accuracy--efficiency trade-off is smooth: doubling $n_{\text{probe}}$ roughly halves the error.
+    \item The recall--efficiency trade-off is smooth: doubling $n_{\text{probe}}$ roughly halves the error.
     \item Query times remain sub-millisecond even at high recall.
 \end{itemize}
 
@@ -438,7 +504,7 @@ Table~\ref{tab:pq-results} shows PQ performance with different subspace configur
 
 \textbf{Key observations:}
 \begin{itemize}
-    \item PQ achieves significant compression (50--200$\times$) but at substantial accuracy cost.
+    \item PQ achieves significant compression (50--200$\times$) but at substantial recall cost.
     \item Maximum Recall@10 of 33\% is inadequate for most applications.
     \item The quantization error is too high for our 200-dimensional vectors with only 2--8 subspaces.
     \item PQ is typically combined with IVF (IVFPQ) to first narrow candidates, then use PQ for fast scoring.
@@ -488,7 +554,7 @@ Combines coarse quantization with PQ compression:
 \begin{itemize}
     \item Uses IVF for candidate selection
     \item Uses PQ for compressed storage and fast scoring
-    \item Provides memory--accuracy trade-off
+    \item Provides memory--recall trade-off
 \end{itemize}
 
 \subsubsection{IndexLSH}
@@ -538,7 +604,7 @@ FAISS-LSH (512 bits) & 0.264 & 0.378 & 88.9\,$\mu$s \\
 \textbf{Key observations:}
 \begin{itemize}
     \item FAISS-IVF achieves 98.8\% recall with query times in \textbf{microseconds}---15--40$\times$ faster than our VQ.
-    \item FAISS-IVFPQ underperforms due to the same PQ accuracy limitations.
+    \item FAISS-IVFPQ underperforms due to the same PQ recall limitations.
     \item FAISS-LSH also shows low recall, suggesting the binary projection loses too much information for our embeddings.
 \end{itemize}
 
@@ -569,30 +635,47 @@ gensim        4.3.2  # for Word2Vec
 Hardware: Standard x86-64 CPU, 16\,GB RAM, no GPU.
 
 \subsubsection{Evaluation Protocol}
+Following Manning et al.~[1], Chapter 8:
 \begin{itemize}
     \item 50 random query documents per configuration
     \item Ground truth: exact brute-force search (FAISS IndexFlatL2)
-    \item Metrics: Recall@10, nDCG@10, candidate ratio, query time
+    \item \textbf{Metrics:} Recall@10, Precision@10, F1@10, nDCG@10, candidate ratio, query time
+    \item Note: In ANN context, Precision@k = Recall@k since $|\text{retrieved}| = |\text{relevant}| = k$
     \item All experiments use \texttt{np.random.seed(42)} for reproducibility
 \end{itemize}
 
-\subsection{Experiment 1: Accuracy vs.\ Efficiency Trade-off}
+\subsection{Experiment 1: Recall vs.\ Efficiency Trade-off}
 
-Figure~\ref{fig:accuracy-efficiency} compares our three custom implementations on the full dataset.
+We compare VQ, PQ, LSH, and FAISS-IVF on the full dataset ($N = 17{,}830$, $d = 200$).
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth]{images/comparison_accuracy_efficiency.png}
-    \caption{Accuracy vs.\ efficiency trade-off for VQ, PQ, and LSH. Left: Recall vs.\ candidate ratio. 
-    Middle: nDCG vs.\ candidate ratio. Right: Recall vs.\ query time.}
-    \label{fig:accuracy-efficiency}
+    \begin{subfigure}[b]{0.48\textwidth}
+        \includegraphics[width=\textwidth]{images/exp1_recall_vs_candidate_ratio.png}
+        \caption{Recall@10 vs.\ Candidate Ratio}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.48\textwidth}
+        \includegraphics[width=\textwidth]{images/exp1_ndcg_vs_candidate_ratio.png}
+        \caption{nDCG@10 vs.\ Candidate Ratio}
+    \end{subfigure}
+    \caption{Effectiveness vs.\ efficiency trade-off.}
+    \label{fig:exp1-efficiency}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\textwidth]{images/exp1_recall_vs_query_time.png}
+    \caption{Recall@10 vs.\ Query Time (log scale). FAISS-IVF achieves similar recall 15--40$\times$ faster.}
+    \label{fig:exp1-speed}
 \end{figure}
 
 \textbf{Analysis:}
 \begin{itemize}
-    \item \textbf{VQ} offers the best accuracy--efficiency trade-off: high recall with small candidate sets.
+    \item \textbf{VQ} offers the best recall--efficiency trade-off among custom implementations.
     \item \textbf{LSH} can reach 100\% recall but requires examining most of the corpus.
-    \item \textbf{PQ} cannot exceed 33\% recall regardless of configuration---inadequate for retrieval.
+    \item \textbf{PQ} cannot exceed 33\% recall---inadequate for retrieval.
+    \item \textbf{FAISS-IVF} matches VQ recall with microsecond-level query times.
 \end{itemize}
 
 \subsection{Experiment 2: Scaling with Dataset Size}
@@ -601,8 +684,16 @@ We measure how build time and query time scale as $N$ increases from 1{,}000 to 
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth]{images/comparison_scaling_N.png}
-    \caption{Scaling behaviour with dataset size. Left: Index construction time. Right: Query time.}
+    \begin{subfigure}[b]{0.48\textwidth}
+        \includegraphics[width=\textwidth]{images/exp2_build_time_vs_N.png}
+        \caption{Index construction time}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.48\textwidth}
+        \includegraphics[width=\textwidth]{images/exp2_query_time_vs_N.png}
+        \caption{Query time (log scale)}
+    \end{subfigure}
+    \caption{Scaling behaviour with dataset size $N$.}
     \label{fig:scaling-n}
 \end{figure}
 
@@ -646,8 +737,16 @@ We vary $d \in \{50, 100, 200\}$ while keeping $N = 10{,}000$ fixed.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth]{images/comparison_scaling_dim.png}
-    \caption{Scaling behaviour with embedding dimensionality.}
+    \begin{subfigure}[b]{0.48\textwidth}
+        \includegraphics[width=\textwidth]{images/exp3_build_time_vs_dim.png}
+        \caption{Index construction time}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.48\textwidth}
+        \includegraphics[width=\textwidth]{images/exp3_query_time_vs_dim.png}
+        \caption{Query time (log scale)}
+    \end{subfigure}
+    \caption{Scaling behaviour with embedding dimensionality $d$.}
     \label{fig:scaling-dim}
 \end{figure}
 
@@ -678,13 +777,44 @@ FAISS-IVF & 0.014 & 0.014 & 0.016 & 0.009 & 0.013 & 0.021 \\
 
 \subsection{Summary Comparison}
 
-Figure~\ref{fig:summary} provides an overview of best-case performance for each method.
+Figures~\ref{fig:summary-effectiveness} and~\ref{fig:summary-timing} provide an overview of best-case performance.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth]{images/comparison_summary.png}
-    \caption{Summary comparison: Best recall, nDCG, build time, and query time per method.}
-    \label{fig:summary}
+    \begin{subfigure}[b]{0.48\textwidth}
+        \includegraphics[width=\textwidth]{images/summary_best_recall.png}
+        \caption{Best Recall@10}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.48\textwidth}
+        \includegraphics[width=\textwidth]{images/summary_best_ndcg.png}
+        \caption{Best nDCG@10}
+    \end{subfigure}
+    \caption{Retrieval effectiveness comparison (best configuration per method).}
+    \label{fig:summary-effectiveness}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.48\textwidth}
+        \includegraphics[width=\textwidth]{images/summary_build_time.png}
+        \caption{Index build time at $N$=10K}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.48\textwidth}
+        \includegraphics[width=\textwidth]{images/summary_query_time.png}
+        \caption{Query time (log scale)}
+    \end{subfigure}
+    \caption{Timing comparison across methods.}
+    \label{fig:summary-timing}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\textwidth]{images/pr_ndcg_vs_recall.png}
+    \caption{Ranking quality (nDCG@10) vs.\ retrieval quality (Recall@10). 
+    Points near the diagonal indicate good ranking of retrieved documents.}
+    \label{fig:ndcg-vs-recall}
 \end{figure}
 
 \begin{table}[H]
@@ -723,7 +853,7 @@ FAISS-LSH & 512 bits & 0.264 & 0.378 & 88.9\,$\mu$s & 2.4\,ms \\
     The quantization error is too high; PQ should be combined with IVF for pre-filtering.
     
     \item \textbf{FAISS dominates in speed.}
-    FAISS-IVF achieves similar accuracy to our VQ while being 15--40$\times$ faster,
+    FAISS-IVF achieves similar recall to our VQ while being 15--40$\times$ faster,
     demonstrating the value of low-level optimisation.
     
     \item \textbf{FAISS-LSH and FAISS-IVFPQ underperform} on our dataset,
@@ -735,7 +865,7 @@ FAISS-LSH & 512 bits & 0.264 & 0.378 & 88.9\,$\mu$s & 2.4\,ms \\
 Based on our experiments:
 
 \begin{itemize}
-    \item \textbf{Use VQ/IVF} when high accuracy is required and memory is not the bottleneck.
+    \item \textbf{Use VQ/IVF} when high recall is required and memory is not the bottleneck.
     Best for interactive search over medium-to-large datasets.
     
     \item \textbf{Use LSH} when you need guaranteed high recall and can tolerate larger candidate sets.
@@ -789,8 +919,9 @@ Potential extensions include:
 \addcontentsline{toc}{section}{References}
 
 \begin{enumerate}
-    \item Manning, C. D., Raghavan, P., \& Sch\"{u}tze, H. (2008). 
+    \item \label{manning2008introduction} Manning, C. D., Raghavan, P., \& Sch\"{u}tze, H. (2008). 
     \textit{Introduction to Information Retrieval}. Cambridge University Press.
+    Chapter 8: Evaluation in Information Retrieval.
     \url{https://nlp.stanford.edu/IR-book/}
     
     \item Johnson, J., Douze, M., \& J\'{e}gou, H. (2019).
