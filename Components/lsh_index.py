@@ -2,7 +2,6 @@ import numpy as np
 from collections import defaultdict
 from sklearn.metrics.pairwise import cosine_similarity
 
-
 class LSHIndex:
     def __init__(self, dimension, k=15, L=10, random_seed=42):
         self.d = dimension
