@@ -53,7 +53,7 @@
 \pagestyle{fancy}
 \fancyhf{}
 \fancyhead[L]{\textcolor{uablue}{Information Retrieval -- Assignment 2}}
-\fancyhead[R]{\textcolor{uablue}{2025/2026}}
+\fancyhead[R]{\textcolor{uablue}{2024/2025}}
 \fancyfoot[C]{\thepage}
 \renewcommand{\headrulewidth}{0.4pt}
 \renewcommand{\footrulewidth}{0pt}
@@ -106,11 +106,11 @@
 
 This assignment implements and benchmarks a complete similarity search pipeline for 
 high-dimensional document embeddings. We developed three custom approximate nearest 
-neighbour (ANN) indexing methods---Vector Quantization (VQ), Product Quantization (PQ), 
-and Locality Sensitive Hashing (LSH)---and compared them against FAISS, a production-grade 
+neighbour (ANN) indexing methods Vector Quantization (VQ), Product Quantization (PQ), 
+and Locality Sensitive Hashing (LSH) and compared them against FAISS, a production level 
 library widely used in industry.
 
-All methods operate on dense 200 dimensional Word2Vec embeddings of movie plot summaries 
+All methods operate on dense 200-dimensional Word2Vec embeddings of movie plot summaries 
 from the Wikipedia Movies dataset ($N = 17{,}830$ documents).
 Following the evaluation framework from Manning et al.~[1] (Chapter 8), we assess 
 retrieval quality using \textbf{Recall@k}, \textbf{Precision@k}, \textbf{F1@k}, and \textbf{nDCG@k}.
@@ -139,8 +139,7 @@ We use the Wikipedia Movies dataset from Kaggle\footnote{\url{https://www.kaggle
 The dataset contains detailed information on approximately \textbf{17,830 films}, including:
 \begin{itemize}
     \item titles and release years,
-    \item plot summaries (free-form text),
-    \item cast and production metadata.
+    \item plot summaries,
 \end{itemize}
 
 This collection is well-suited for similarity search: movie plots tend to cluster 
@@ -151,7 +150,8 @@ space intuitively correspond to semantically related films.
 
 \subsubsection{Choice of Embedding Model}
 
-We represent documents using \textbf{Word2Vec} embeddings, for the following reasons:
+We represent documents using \textbf{Word2Vec} embeddings~[6], for the following reasons:
+
 
 \begin{itemize}
     \item \textbf{LSI (Latent Semantic Indexing)} produces lower-dimensional latent 
@@ -211,8 +211,10 @@ This representation is well-suited for ANN methods because:
 % ============================================================
 \section{Evaluation Metrics}
 
-Following the standard evaluation framework from Manning et al.~[1], 
-Chapter 8, we employ the following metrics for assessing retrieval quality.
+Following the standard evaluation framework from Manning et al.~[1, Ch.~8] 
+and the course slides on evaluation and feedback expansion~[2], 
+we employ the following metrics...
+
 
 \subsection{Metrics for Ranked Retrieval}
 
@@ -269,7 +271,7 @@ Time to construct the index from the document collection.
 
 Following Manning et al., we \textbf{do not use accuracy} ($\frac{TP + TN}{TP + TN + FP + FN}$) 
 because it is dominated by true negatives in retrieval tasks. A system that returns nothing 
-achieves $\sim$99.99\% accuracy on a corpus of 17,830 documents when retrieving 10---clearly 
+achieves $\sim$99.99\% accuracy on a corpus of 17,830 documents when retrieving 10 clearly 
 a useless metric for IR evaluation.
 
 % ============================================================
@@ -373,7 +375,8 @@ Table~\ref{tab:vq-results} shows VQ performance on our full dataset ($N = 17{,}8
 \subsection{Theoretical Foundation}
 
 Locality Sensitive Hashing (LSH) offers probabilistic guarantees for ANN search.  
-For cosine similarity, we use \textbf{random hyperplane hashing}:
+For cosine similarity, we use \textbf{random hyperplane hashing}~[8]:
+
 
 \[
 h(\mathbf{v}) = \text{sign}(\mathbf{w} \cdot \mathbf{v}), 
@@ -443,9 +446,11 @@ Table~\ref{tab:lsh-results} shows LSH performance with different band configurat
 
 \textbf{Key observations:}
 \begin{itemize}
-    \item LSH achieves \textbf{perfect recall} (100\%) with $b \geq 16$ bands.
+    \item LSH can achieve perfect recall (100\%) with a dense band configuration ($b=16$, $r=8$), 
+but this effectively degenerates into an almost exhaustive search (candidate ratio $\approx 98\%$).
+
     \item The trade-off is clear: more bands $\rightarrow$ higher recall but larger candidate sets.
-    \item At $b = 8$, we get 83.8\% recall while examining only 40.7\% of the corpus---a reasonable compromise.
+    \item At $b = 8$, we get 83.8\% recall while examining only 40.7\% of the corpus a reasonable compromise.
     \item Query times scale with candidate set size (dominated by exact re-ranking).
 \end{itemize}
 
@@ -464,7 +469,7 @@ Table~\ref{tab:lsh-results} shows LSH performance with different band configurat
 
 \subsection{Algorithmic Approach}
 
-Product Quantization (PQ) compresses vectors by:
+Product Quantization (PQ) compresses vectors by~[7]:
 \begin{enumerate}
     \item Splitting each $d$-dimensional vector into $m$ sub-vectors of dimension $d/m$
     \item Learning $k$ centroids for each subspace via $k$-means
@@ -514,7 +519,7 @@ Table~\ref{tab:pq-results} shows PQ performance with different subspace configur
 
 The standalone PQ implementation underperforms because:
 \begin{itemize}
-    \item With $m=8$ subspaces, each has only 25 dimensions---too coarse for accurate distance approximation.
+    \item With $m=8$ subspaces, each has only 25 dimensions too coarse for accurate distance approximation.
     \item PQ works best with more subspaces (e.g., $m=32$ or $m=64$), but our $d=200$ doesn't divide evenly.
     \item Without IVF pre-filtering, PQ must scan all vectors, losing any efficiency benefit.
 \end{itemize}
@@ -524,8 +529,8 @@ The standalone PQ implementation underperforms because:
 
 \subsection{Overview}
 
-FAISS (Facebook AI Similarity Search) is an open-source library developed by Meta AI Research 
-for efficient similarity search and clustering of dense vectors~[2].
+FAISS (Facebook AI Similarity Search) is an open-source library developed by Meta AI Research for efficient similarity search and clustering of dense vectors~[9,12].
+
 
 Key properties:
 \begin{itemize}
@@ -603,7 +608,7 @@ FAISS-LSH (512 bits) & 0.264 & 0.378 & 88.9\,$\mu$s \\
 
 \textbf{Key observations:}
 \begin{itemize}
-    \item FAISS-IVF achieves 98.8\% recall with query times in \textbf{microseconds}---15--40$\times$ faster than our VQ.
+    \item FAISS-IVF achieves 98.8\% recall with query times in \textbf{microseconds} 15--40$\times$ faster than our VQ.
     \item FAISS-IVFPQ underperforms due to the same PQ recall limitations.
     \item FAISS-LSH also shows low recall, suggesting the binary projection loses too much information for our embeddings.
 \end{itemize}
@@ -674,7 +679,7 @@ We compare VQ, PQ, LSH, and FAISS-IVF on the full dataset ($N = 17{,}830$, $d = 
 \begin{itemize}
     \item \textbf{VQ} offers the best recall--efficiency trade-off among custom implementations.
     \item \textbf{LSH} can reach 100\% recall but requires examining most of the corpus.
-    \item \textbf{PQ} cannot exceed 33\% recall---inadequate for retrieval.
+    \item \textbf{PQ} cannot exceed 33\% recall inadequate for retrieval.
     \item \textbf{FAISS-IVF} matches VQ recall with microsecond-level query times.
 \end{itemize}
 
@@ -844,15 +849,15 @@ FAISS-LSH & 512 bits & 0.264 & 0.378 & 88.9\,$\mu$s & 2.4\,ms \\
 
 \begin{enumerate}
     \item \textbf{VQ is the most practical custom implementation.}
-    It achieves 97.6\% recall while examining only 13.4\% of the corpus, with sub-millisecond queries.
+    It achieves 97.6\% recall while examining only 13.4\% of the corpus, with sub millisecond queries.
     
     \item \textbf{LSH can achieve perfect recall} but requires examining most documents.
-    The probabilistic nature means there's a trade off between recall and candidate set size.
+    The probabilistic nature means there's a trade-off between recall and candidate set size.
     
     \item \textbf{Standalone PQ is inadequate for retrieval.}
     The quantization error is too high; PQ should be combined with IVF for pre-filtering.
     
-    \item \textbf{FAISS dominates in speed.}
+    \item \textbf{FAISS is consistently the fastest option in our experiments.}
     FAISS-IVF achieves similar recall to our VQ while being 15--40$\times$ faster,
     demonstrating the value of low-level optimisation.
     
@@ -873,8 +878,8 @@ Based on our experiments:
     
     \item \textbf{Avoid standalone PQ} for direct retrieval; use IVFPQ if memory is constrained.
     
-    \item \textbf{Use FAISS} for production systems---it provides the same algorithmic approaches
-    with orders-of-magnitude better performance.
+    \item \textbf{Use FAISS} for production systems it provides the same algorithmic approaches
+    often one to two orders of magnitude faster in our setup.
 \end{itemize}
 
 \subsection{Lessons Learned}
@@ -904,16 +909,8 @@ Based on our experiments:
     \item We assumed static indices; dynamic updates were not benchmarked.
 \end{itemize}
 
-\subsection{Future Work}
 
-Potential extensions include:
-\begin{itemize}
-    \item Implementing graph-based indices (HNSW) for comparison
-    \item Exploring dynamic index maintenance with incremental updates
-    \item Testing on larger datasets and different embedding types
-    \item GPU-accelerated FAISS experiments
-\end{itemize}
-
+% ============================================================
 % ============================================================
 \section*{References}
 \addcontentsline{toc}{section}{References}
@@ -1001,3 +998,4 @@ FAISS library. GitHub repository. Retrieved from\\
 \url{https://github.com/facebookresearch/faiss}
 
 \end{document}
+
